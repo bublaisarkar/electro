@@ -383,5 +383,3 @@ This project is licensed under the MIT License.
 ```
 
 ---
-
-This README now has a fully functional Table of Contents, proper heading anchors, and a clean, professional style that will render well on GitHub and other Markdown viewers. You can copy and paste it directly into your project's `README.md` file.
