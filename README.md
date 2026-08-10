@@ -1,4 +1,6 @@
-Here's a professional `README.md` for your Electro Store, formatted like the Blogster example:
+I've fixed the `README.md` to ensure the Table of Contents links work correctly and the styling is clean and consistent. The headers now use proper anchor IDs, and the structure is well-organized.
+
+Here is the final `README.md` you can use for your project:
 
 ---
 
@@ -11,73 +13,74 @@ Here's a professional `README.md` for your Electro Store, formatted like the Blo
 
 ---
 
-## 📋 Table of Contents
+## Table of Contents
 
-- [Features](#-features)
-- [Tech Stack](#-tech-stack)
-- [Getting Started](#-getting-started)
-- [Environment Variables](#-environment-variables)
-- [Running the Application](#-running-the-application)
-- [Project Structure](#-project-structure)
-- [Deployment](#-deployment)
-- [Contributing](#-contributing)
-- [License](#-license)
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Getting Started](#getting-started)
+- [Environment Variables](#environment-variables)
+- [Running the Application](#running-the-application)
+- [Project Structure](#project-structure)
+- [Deployment](#deployment)
+- [Contributing](#contributing)
+- [License](#license)
+- [Acknowledgments](#acknowledgments)
+- [Contact](#contact)
 
 ---
 
-## 🚀 Features
+## Features
 
 ### Customer Features
-- **Product Browsing** - Browse products with category filters and search
-- **Product Details** - View product images, descriptions, ratings, and reviews
-- **Shopping Cart** - Add/remove items, update quantities, persistent storage
-- **Wishlist** - Save favorite products for later
-- **Checkout** - Select addresses, apply promo codes, multiple payment methods
-- **Order Management** - View order history and order status
-- **User Profile** - Manage profile and saved addresses
+- **Product Browsing** – Browse products with category filters and search.
+- **Product Details** – View product images, descriptions, ratings, and reviews.
+- **Shopping Cart** – Add/remove items, update quantities, persistent storage.
+- **Wishlist** – Save favorite products for later.
+- **Checkout** – Select addresses, apply promo codes, multiple payment methods.
+- **Order Management** – View order history and order status.
+- **User Profile** – Manage profile and saved addresses.
 
 ### Authentication
-- **Google OAuth** - Sign in with Google
-- **Email/Password** - Traditional sign up and login
-- **JWT Sessions** - Secure session management with NextAuth.js
-- **Protected Routes** - API and page protection with middleware
+- **Google OAuth** – Sign in with Google.
+- **Email/Password** – Traditional sign up and login.
+- **JWT Sessions** – Secure session management with NextAuth.js.
+- **Protected Routes** – API and page protection with middleware.
 
 ### Seller Dashboard
-- **Product Management** - Create, edit, delete products with Cloudinary image uploads
-- **Order Management** - View all orders, update order status (pending → shipped → delivered → cancelled)
-- **Promo Code Management** - Create, edit, delete promotional codes with flexible rules
-- **Category Management** - Manage product categories (CRUD)
-- **Dashboard Analytics** - View revenue, order counts, products, and order status distribution
+- **Product Management** – Create, edit, delete products with Cloudinary image uploads.
+- **Order Management** – View all orders, update order status (pending → shipped → delivered → cancelled).
+- **Promo Code Management** – Create, edit, delete promotional codes with flexible rules.
+- **Category Management** – Manage product categories (CRUD).
+- **Dashboard Analytics** – View revenue, order counts, products, and order status distribution.
 
 ### Admin Panel
-- **User Management** - View all users, toggle seller/admin roles
-- **Full Control** - Access to all platform features and data
-- **Role-Based Access** - Different permissions for customers, sellers, and admins
+- **User Management** – View all users, toggle seller/admin roles.
+- **Full Control** – Access to all platform features and data.
+- **Role-Based Access** – Different permissions for customers, sellers, and admins.
 
 ### Payment Processing
-- **Razorpay Integration** - Secure payment processing (test & live modes)
-- **Multiple Methods** - COD, Card, UPI, Net Banking
-- **Payment Verification** - Automatic payment verification server-side
+- **Razorpay Integration** – Secure payment processing (test & live modes).
+- **Multiple Methods** – COD, Card, UPI, Net Banking.
+- **Payment Verification** – Automatic payment verification server-side.
 
 ### Marketing & Communication
-- **Newsletter Subscription** - Email capture for marketing
-- **Contact Form** - Customer inquiries via Nodemailer
-- **Promo Codes** - Discount codes with flexible rules
+- **Newsletter Subscription** – Email capture for marketing.
+- **Contact Form** – Customer inquiries via Nodemailer.
+- **Promo Codes** – Discount codes with flexible rules.
 
 ### Performance & SEO
-- **Next.js 15** - Fast, server-side rendered React
-- **Image Optimization** - Lazy loading, responsive images with Next.js Image
-- **SEO-Ready** - Meta tags, Open Graph, sitemap, robots.txt
-- **PWA Ready** - Progressive Web App support (installable)
+- **Next.js 15** – Fast, server-side rendered React.
+- **Image Optimization** – Lazy loading, responsive images with Next.js Image.
+- **SEO-Ready** – Meta tags, Open Graph, sitemap, robots.txt.
+- **PWA Ready** – Progressive Web App support (installable).
 
 ### Mobile Support
-- **Progressive Web App (PWA)** - Install on mobile devices
-- **Responsive Design** - Works seamlessly on all screen sizes
-- **Touch-Optimized** - Mobile-first user experience
+- **Responsive Design** – Works seamlessly on all screen sizes.
+- **Touch-Optimized** – Mobile-first user experience.
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 ### Frontend
 | Technology | Purpose |
@@ -109,7 +112,7 @@ Here's a professional `README.md` for your Electro Store, formatted like the Blo
 
 ---
 
-## 📦 Getting Started
+## Getting Started
 
 ### Prerequisites
 
@@ -149,9 +152,7 @@ Visit `http://localhost:3000`
 
 ---
 
-## 🔐 Environment Variables
-
-### Required Variables
+## Environment Variables
 
 Create a `.env.local` file in the root directory:
 
@@ -191,7 +192,7 @@ NEXT_PUBLIC_CURRENCY=USD
 
 ---
 
-## 🏃 Running the Application
+## Running the Application
 
 ### Development Mode
 
@@ -223,7 +224,7 @@ npm run lint
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 electro/
@@ -288,7 +289,7 @@ electro/
 
 ---
 
-## 🌐 Deployment
+## Deployment
 
 The application is deployed on Vercel. To deploy your own instance:
 
@@ -318,8 +319,6 @@ git push origin main
 
 ### Environment Variables on Vercel
 
-Make sure to add all the same environment variables you have in `.env.local`:
-
 ```env
 MONGODB_URI=
 NEXTAUTH_URL=https://your-domain.vercel.app
@@ -345,7 +344,7 @@ Make sure your MongoDB Atlas cluster allows connections from Vercel's IP address
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome! Please follow these steps:
 
@@ -357,26 +356,26 @@ Contributions are welcome! Please follow these steps:
 
 ---
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License.
 
 ---
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
-- [Next.js](https://nextjs.org/) - React framework
-- [Tailwind CSS](https://tailwindcss.com/) - CSS framework
-- [MongoDB](https://www.mongodb.com/) - Database
-- [NextAuth.js](https://next-auth.js.org/) - Authentication
-- [Razorpay](https://razorpay.com/) - Payment processing
-- [Cloudinary](https://cloudinary.com/) - Image hosting
-- [Lucide](https://lucide.dev/) - Icons
-- [Vercel](https://vercel.com/) - Hosting
+- [Next.js](https://nextjs.org/) – React framework
+- [Tailwind CSS](https://tailwindcss.com/) – CSS framework
+- [MongoDB](https://www.mongodb.com/) – Database
+- [NextAuth.js](https://next-auth.js.org/) – Authentication
+- [Razorpay](https://razorpay.com/) – Payment processing
+- [Cloudinary](https://cloudinary.com/) – Image hosting
+- [Lucide](https://lucide.dev/) – Icons
+- [Vercel](https://vercel.com/) – Hosting
 
 ---
 
-## 📧 Contact
+## Contact
 
 **Developer:** Bublai Sarkar
 - GitHub: [@bublaisarkar](https://github.com/bublaisarkar)
@@ -387,3 +386,7 @@ This project is licensed under the MIT License.
 
 **Built with ❤️ using Next.js**
 ```
+
+---
+
+This README now has a fully functional Table of Contents, proper heading anchors, and a clean, professional style that will render well on GitHub and other Markdown viewers. You can copy and paste it directly into your project's `README.md` file.
