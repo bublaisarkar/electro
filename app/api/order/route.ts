@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
+import type { Session } from 'next-auth'; // ✅ import the Session type
 import { connectToDatabase } from '@/lib/mongodb';
 import Order from '@/models/Order';
 import Product from '@/models/Product';
@@ -9,8 +10,11 @@ import { authOptions } from '@/lib/auth';
 // ─── GET all orders for the logged‑in user ───
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session || !session.user) {
+    const session = (await getServerSession(authOptions)) as (Session & {
+      user: { id: string };
+    }) | null;
+
+    if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -31,8 +35,11 @@ export async function GET() {
 // ─── POST create a new order ───
 export async function POST(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session || !session.user) {
+    const session = (await getServerSession(authOptions)) as (Session & {
+      user: { id: string };
+    }) | null;
+
+    if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -89,13 +96,11 @@ export async function POST(req: Request) {
           { status: 400 }
         );
       }
-      // Cap discount so final amount never goes below zero
       appliedDiscount = Math.min(discountNum, totalAmount);
       finalAmount = totalAmount - appliedDiscount;
     }
 
     // Determine payment status
-    // If final amount is zero (or negligible), mark as paid immediately
     const isFreeOrder = finalAmount <= 0.01;
     const paymentStatus = isFreeOrder ? 'Paid' : 'Pending';
 
@@ -114,7 +119,6 @@ export async function POST(req: Request) {
 
     const order = await Order.create(orderData);
 
-    // Populate product details and address for the response
     await order.populate('items.product');
     await order.populate('address');
 

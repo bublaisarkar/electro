@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
+import type { Session } from 'next-auth'; // ✅ import type
 import { connectToDatabase } from '@/lib/mongodb';
 import Category from '@/models/Category';
 import User from '@/models/User';
@@ -23,8 +24,12 @@ export async function GET() {
 // ─── POST create a new category (admin/seller only) ───
 export async function POST(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user) {
+    // ✅ Type‑safe session
+    const session = (await getServerSession(authOptions)) as (Session & {
+      user: { id: string };
+    }) | null;
+
+    if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -56,7 +61,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // Generate slug manually as a fallback (the model's pre‑save hook will also do this)
+    // Generate slug manually as a fallback
     const slug = name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-');
 
     const category = await Category.create({
@@ -66,14 +71,16 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json(category, { status: 201 });
-  } catch (error: any) {
-    // Handle duplicate key error (MongoDB error code 11000)
-    if (error.code === 11000) {
+  } catch (error) {
+    // ✅ Type‑safe error handling
+    // Check for MongoDB duplicate key error (code 11000)
+    if (typeof error === 'object' && error !== null && 'code' in error && error.code === 11000) {
       return NextResponse.json(
         { error: 'Category with this name already exists' },
         { status: 409 }
       );
     }
+
     console.error('POST /api/categories error:', error);
     return NextResponse.json(
       { error: 'Failed to create category' },

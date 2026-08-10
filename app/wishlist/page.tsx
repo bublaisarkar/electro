@@ -9,10 +9,21 @@ import ProductCard from '@/components/ProductCard';
 import Loading from '@/components/Loading';
 import { Heart } from 'lucide-react';
 
+// ✅ Updated Product type to match ProductCard expectations
+interface Product {
+  _id: string;
+  name: string;
+  price: number;
+  offerPrice: number;
+  image?: string[];
+  rating: number;
+  inStock: boolean;
+}
+
 export default function WishlistPage() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
-  const [products, setProducts] = useState([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

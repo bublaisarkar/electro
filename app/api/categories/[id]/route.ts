@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
+import type { Session } from 'next-auth'; // ✅ import Session type
 import { connectToDatabase } from '@/lib/mongodb';
 import Category from '@/models/Category';
 import User from '@/models/User';
@@ -33,8 +34,9 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user) {
+    // ✅ Type the session
+    const session = (await getServerSession(authOptions)) as Session | null;
+    if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -68,8 +70,9 @@ export async function PUT(
     return NextResponse.json(category);
   } catch (error) {
     console.error('PUT /api/categories/[id] error:', error);
+    const message = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
-      { error: 'Failed to update category' },
+      { error: 'Failed to update category', details: message },
       { status: 500 }
     );
   }
@@ -81,8 +84,8 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user) {
+    const session = (await getServerSession(authOptions)) as Session | null;
+    if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -103,8 +106,9 @@ export async function DELETE(
     return NextResponse.json({ message: 'Category deleted successfully' });
   } catch (error) {
     console.error('DELETE /api/categories/[id] error:', error);
+    const message = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
-      { error: 'Failed to delete category' },
+      { error: 'Failed to delete category', details: message },
       { status: 500 }
     );
   }

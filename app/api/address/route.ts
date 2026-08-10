@@ -1,20 +1,20 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
+import type { Session } from 'next-auth'; // ✅ import Session type
 import { connectToDatabase } from '@/lib/mongodb';
 import Address from '@/models/Address';
-import { authOptions } from "@/lib/auth";
+import { authOptions } from '@/lib/auth';
 import mongoose from 'mongoose';
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions);
+    const session = (await getServerSession(authOptions)) as Session | null;
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     await connectToDatabase();
 
-    // ✅ Convert to ObjectId to match the schema
     const userId = new mongoose.Types.ObjectId(session.user.id);
     const addresses = await Address.find({ userId }).sort({ createdAt: -1 });
 
@@ -27,7 +27,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = (await getServerSession(authOptions)) as Session | null;
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -45,7 +45,6 @@ export async function POST(req: Request) {
 
     await connectToDatabase();
 
-    // ✅ Save with ObjectId
     const address = await Address.create({
       ...body,
       userId: new mongoose.Types.ObjectId(session.user.id),

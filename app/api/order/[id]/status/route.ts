@@ -1,33 +1,34 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
+import type { Session } from 'next-auth';
 import { connectToDatabase } from '@/lib/mongodb';
 import Order from '@/models/Order';
 import { authOptions } from '@/lib/auth';
+import User from '@/models/User'; // ✅ now used
 
-// ─── PUT update order status (seller only) ───
 export async function PUT(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params; // ✅ Unwrap the Promise
+    const { id } = await params;
 
-    const session = await getServerSession(authOptions);
-    if (!session?.user) {
+    const session = (await getServerSession(authOptions)) as Session | null;
+    if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Optional: check if user is a seller
-    // You can uncomment this to restrict status updates to sellers only:
-    // const user = await User.findById(session.user.id);
-    // if (!user.isSeller) {
-    //   return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    // }
+    await connectToDatabase(); // moved up – needed for the user check too
+
+    // ✅ Seller restriction – recommended
+    const user = await User.findById(session.user.id);
+    if (!user || !user.isSeller) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
 
     const body = await req.json();
     const { status } = body;
 
-    // Validate status
     const validStatuses = ['pending', 'shipped', 'delivered', 'cancelled'];
     if (!status || !validStatuses.includes(status)) {
       return NextResponse.json(
@@ -35,8 +36,6 @@ export async function PUT(
         { status: 400 }
       );
     }
-
-    await connectToDatabase();
 
     const order = await Order.findById(id);
 
@@ -47,7 +46,6 @@ export async function PUT(
     order.status = status;
     await order.save();
 
-    // Populate for response
     await order.populate('items.product');
     await order.populate('address');
 

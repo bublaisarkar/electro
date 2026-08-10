@@ -1,30 +1,32 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
+import type { Session } from 'next-auth'; // ✅ import the Session type
 import { connectToDatabase } from '@/lib/mongodb';
 import User from '@/models/User';
-import Address from '@/models/Address'; // ✅ Import the model
+import Address from '@/models/Address';
 import { authOptions } from '@/lib/auth';
 
 // ─── GET: Fetch the current user's profile ───
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user) {
+    // ✅ Type‑safe session
+    const session = (await getServerSession(authOptions)) as (Session & {
+      user: { id: string };
+    }) | null;
+
+    if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     await connectToDatabase();
 
-    // Fetch user
     const user = await User.findById(session.user.id).select('-password');
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // ✅ Manually fetch addresses instead of using populate
     const addresses = await Address.find({ userId: user._id }).sort({ createdAt: -1 });
 
-    // Convert to plain object and attach addresses
     const userObj = user.toObject();
     userObj.addresses = addresses;
 
@@ -41,8 +43,12 @@ export async function GET() {
 // ─── PUT: Update the current user's profile ───
 export async function PUT(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user) {
+    // ✅ Type‑safe session
+    const session = (await getServerSession(authOptions)) as (Session & {
+      user: { id: string };
+    }) | null;
+
+    if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
+import type { Session } from 'next-auth'; // ✅ import the Session type
 import { connectToDatabase } from '@/lib/mongodb';
 import Order from '@/models/Order';
 import { authOptions } from '@/lib/auth';
@@ -7,8 +8,12 @@ import crypto from 'crypto';
 
 export async function POST(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session || !session.user) {
+    // ✅ Type‑safe session with user.id
+    const session = (await getServerSession(authOptions)) as (Session & {
+      user: { id: string };
+    }) | null;
+
+    if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -43,6 +48,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Order not found' }, { status: 404 });
     }
 
+    // ✅ Now session.user.id is recognised
     if (order.user.toString() !== session.user.id) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }

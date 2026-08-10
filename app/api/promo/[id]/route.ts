@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
+import type { Session } from 'next-auth'; // ✅ import type
 import { connectToDatabase } from '@/lib/mongodb';
 import PromoCode from '@/models/PromoCode';
 import User from '@/models/User';
@@ -11,7 +12,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params; // ✅ Unwrap the Promise
+    const { id } = await params;
 
     await connectToDatabase();
     const promo = await PromoCode.findById(id);
@@ -31,22 +32,25 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params; // ✅ Unwrap the Promise
+    const { id } = await params;
 
-    const session = await getServerSession(authOptions);
-    if (!session?.user) {
+    // ✅ Type‑safe session
+    const session = (await getServerSession(authOptions)) as (Session & {
+      user: { id: string };
+    }) | null;
+
+    if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Check if user is a seller
+    await connectToDatabase();
     const user = await User.findById(session.user.id);
     if (!user?.isSeller) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const body = await req.json();
-
-    await connectToDatabase();
 
     const promo = await PromoCode.findByIdAndUpdate(
       id,
@@ -71,19 +75,22 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params; // ✅ Unwrap the Promise
+    const { id } = await params;
 
-    const session = await getServerSession(authOptions);
-    if (!session?.user) {
+    // ✅ Type‑safe session
+    const session = (await getServerSession(authOptions)) as (Session & {
+      user: { id: string };
+    }) | null;
+
+    if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    await connectToDatabase();
     const user = await User.findById(session.user.id);
     if (!user?.isSeller) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
-
-    await connectToDatabase();
 
     const promo = await PromoCode.findByIdAndDelete(id);
     if (!promo) {

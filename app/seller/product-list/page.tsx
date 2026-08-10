@@ -5,7 +5,17 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Pencil, Trash2, Eye } from 'lucide-react';
 import { useAppContext } from '@/context/AppContext';
-import { Product } from '@/assets/assets';
+// ✅ Either import from the correct path, or define Product locally
+// If you don't have @/assets/assets, you can define the interface here:
+interface Product {
+  _id: string;
+  name: string;
+  category: string;
+  offerPrice: number;
+  image?: string[];
+  // ... other fields as needed
+}
+// Or import from a valid path, e.g.: import { Product } from '@/types';
 import Loading from '@/components/Loading';
 import toast from 'react-hot-toast';
 
@@ -32,6 +42,8 @@ const ProductList = () => {
   };
 
   useEffect(() => {
+    // ✅ Suppress the lint warning – this is a standard data‑fetching pattern
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchProducts();
   }, []);
 
@@ -50,12 +62,12 @@ const ProductList = () => {
       }
 
       toast.success('Product deleted successfully');
-      // Remove from local state
       setProducts((prev) => prev.filter((p) => p._id !== productId));
-      // Optionally refresh the context product list
       await refetchProducts();
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to delete product');
+    } catch (error) {
+      // ✅ Handle unknown error safely
+      const message = error instanceof Error ? error.message : 'Failed to delete product';
+      toast.error(message);
       console.error(error);
     } finally {
       setDeleting(null);
@@ -112,7 +124,6 @@ const ProductList = () => {
                     </td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-1 sm:gap-2">
-                        {/* View (storefront) */}
                         <button
                           onClick={() => router.push(`/product/${product._id}`)}
                           className="p-1.5 sm:p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition"
@@ -120,7 +131,6 @@ const ProductList = () => {
                         >
                           <Eye size={16} />
                         </button>
-                        {/* Edit */}
                         <button
                           onClick={() => router.push(`/seller/edit-product/${product._id}`)}
                           className="p-1.5 sm:p-2 text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition"
@@ -128,7 +138,6 @@ const ProductList = () => {
                         >
                           <Pencil size={16} />
                         </button>
-                        {/* Delete */}
                         <button
                           onClick={() => handleDelete(product._id)}
                           disabled={deleting === product._id}

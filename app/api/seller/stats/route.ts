@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
+import type { Session } from 'next-auth'; // ✅ import type
 import { connectToDatabase } from '@/lib/mongodb';
 import Order from '@/models/Order';
 import Product from '@/models/Product';
@@ -8,18 +9,22 @@ import { authOptions } from '@/lib/auth';
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session || !session.user) {
+    // ✅ Type‑safe session
+    const session = (await getServerSession(authOptions)) as (Session & {
+      user: { id: string };
+    }) | null;
+
+    if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    await connectToDatabase(); // ✅ moved before using any model
 
     // Check if user is a seller
     const user = await User.findById(session.user.id);
     if (!user || !user.isSeller) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
-
-    await connectToDatabase();
 
     // Total orders
     const totalOrders = await Order.countDocuments();
@@ -46,12 +51,21 @@ export async function GET() {
       { $group: { _id: '$status', count: { $sum: 1 } } },
     ]);
 
-    const orderStatusCounts = { pending: 0, shipped: 0, delivered: 0, cancelled: 0 };
-    statusCounts.forEach((item) => {
-      if (item._id in orderStatusCounts) {
-        orderStatusCounts[item._id] = item.count;
+    // ✅ Type‑safe status counts with a type guard
+    const orderStatusCounts: { pending: number; shipped: number; delivered: number; cancelled: number } = {
+      pending: 0,
+      shipped: 0,
+      delivered: 0,
+      cancelled: 0,
+    };
+
+    const validStatuses = new Set(['pending', 'shipped', 'delivered', 'cancelled']);
+    for (const item of statusCounts) {
+      const status = item._id as string;
+      if (validStatuses.has(status)) {
+        orderStatusCounts[status as keyof typeof orderStatusCounts] = item.count;
       }
-    });
+    }
 
     return NextResponse.json({
       totalOrders,

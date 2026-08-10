@@ -1,21 +1,21 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
+import type { Session } from 'next-auth';
 import { connectToDatabase } from '@/lib/mongodb';
 import Order, { IOrder } from '@/models/Order';
 import { authOptions } from '@/lib/auth';
 
 type OrderDoc = IOrder & { user: { toString(): string } };
 
-// ─── GET a single order by ID ───
 export async function GET(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params; // ✅ Unwrap the Promise
+    const { id } = await params;
 
-    const session = await getServerSession(authOptions);
-    if (!session?.user) {
+    const session = (await getServerSession(authOptions)) as Session | null;
+    if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -31,7 +31,7 @@ export async function GET(
 
     const orderWithUser = order as OrderDoc;
     const isOwner = orderWithUser.user.toString() === session.user.id;
-    const isStaff = session.user.isSeller || session.user.isAdmin;
+    const isStaff = session.user.isSeller || session.user.isAdmin; // ✅ now works
 
     if (!isOwner && !isStaff) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
@@ -47,20 +47,18 @@ export async function GET(
   }
 }
 
-// ─── PUT update order status ───
 export async function PUT(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params; // ✅ Unwrap the Promise
+    const { id } = await params;
 
-    const session = await getServerSession(authOptions);
-    if (!session?.user) {
+    const session = (await getServerSession(authOptions)) as Session | null;
+    if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Only sellers and admins can update status
     if (!session.user.isSeller && !session.user.isAdmin) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }

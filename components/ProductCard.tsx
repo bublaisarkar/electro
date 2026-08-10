@@ -6,8 +6,19 @@ import { useAppContext } from "@/context/AppContext";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Heart, Star, ShoppingBag, Plus } from "lucide-react";
-import { Product } from "@/assets/assets";
 import toast from "react-hot-toast";
+
+// ✅ Define Product interface locally (or import from a shared types file)
+interface Product {
+  _id: string;
+  name: string;
+  image?: string[];
+  rating: number;
+  offerPrice: number;
+  price: number;
+  inStock: boolean;
+  // ... other fields as needed
+}
 
 type ProductCardProps = {
   product: Product;
@@ -15,7 +26,8 @@ type ProductCardProps = {
 
 const ProductCard = ({ product }: ProductCardProps) => {
   const { currency, addToCart } = useAppContext();
-  const { data: session, status } = useSession();
+  // ✅ Only take status – session is not needed
+  const { status } = useSession();
   const router = useRouter();
 
   const { _id, name, image, rating, offerPrice, price, inStock } = product;
@@ -24,21 +36,24 @@ const ProductCard = ({ product }: ProductCardProps) => {
   const [isAdded, setIsAdded] = useState(false);
   const [loadingWishlist, setLoadingWishlist] = useState(false);
 
-  const imageSrc = Array.isArray(image) && image.length > 0
-    ? image[0]
-    : '/placeholder.png';
+  const imageSrc =
+    Array.isArray(image) && image.length > 0
+      ? image[0]
+      : "/placeholder.png";
 
   // Fetch wishlist status on mount (only if authenticated)
   useEffect(() => {
     const fetchWishlist = async () => {
-      if (status !== 'authenticated') return;
+      if (status !== "authenticated") return;
       try {
-        const res = await fetch('/api/user/wishlist');
-        if (!res.ok) throw new Error('Failed to fetch wishlist');
-        const data = await res.json();
-        setIsWishlisted(data.some((p: any) => p._id === _id));
-      } catch (error) {
-        // Silent fail – wishlist is non‑critical
+        const res = await fetch("/api/user/wishlist");
+        if (!res.ok) throw new Error("Failed to fetch wishlist");
+        const data = (await res.json()) as Product[];
+        // ✅ No 'any' – the data is typed as Product[]
+        setIsWishlisted(data.some((p) => p._id === _id));
+      } catch {
+        // Silent fail – wishlist is non‑critical; we can log if needed
+        // console.error(error);
       }
     };
     fetchWishlist();
@@ -52,7 +67,11 @@ const ProductCard = ({ product }: ProductCardProps) => {
     return (
       <>
         {Array.from({ length: full }).map((_, i) => (
-          <Star key={`full-${i}`} size={14} className="fill-yellow-400 text-yellow-400" />
+          <Star
+            key={`full-${i}`}
+            size={14}
+            className="fill-yellow-400 text-yellow-400"
+          />
         ))}
         {half === 1 && (
           <Star
@@ -76,10 +95,12 @@ const ProductCard = ({ product }: ProductCardProps) => {
   const handleWishlist = async (e: React.MouseEvent) => {
     e.stopPropagation();
 
-    // If not logged in, redirect to sign in
-    if (status !== 'authenticated') {
-      toast.error('Please sign in to add to wishlist');
-      router.push('/auth/signin?callbackUrl=' + encodeURIComponent(window.location.pathname));
+    if (status !== "authenticated") {
+      toast.error("Please sign in to add to wishlist");
+      router.push(
+        "/auth/signin?callbackUrl=" +
+          encodeURIComponent(window.location.pathname)
+      );
       return;
     }
 
@@ -87,22 +108,26 @@ const ProductCard = ({ product }: ProductCardProps) => {
 
     setLoadingWishlist(true);
     try {
-      const res = await fetch('/api/user/wishlist', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/user/wishlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ productId: _id }),
       });
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || 'Failed to update wishlist');
+        throw new Error(data.error || "Failed to update wishlist");
       }
 
       const data = await res.json();
-      setIsWishlisted(data.action === 'added');
-      toast.success(data.action === 'added' ? 'Added to wishlist' : 'Removed from wishlist');
-    } catch (error: any) {
-      toast.error(error.message || 'Something went wrong');
+      setIsWishlisted(data.action === "added");
+      toast.success(
+        data.action === "added" ? "Added to wishlist" : "Removed from wishlist"
+      );
+    } catch (err) {
+      // ✅ Proper error handling without 'any'
+      const message = err instanceof Error ? err.message : "Something went wrong";
+      toast.error(message);
     } finally {
       setLoadingWishlist(false);
     }
@@ -154,7 +179,9 @@ const ProductCard = ({ product }: ProductCardProps) => {
           <Heart
             size={18}
             className={`transition-colors ${
-              isWishlisted ? "fill-red-500 text-red-500" : "text-gray-500 hover:text-red-400"
+              isWishlisted
+                ? "fill-red-500 text-red-500"
+                : "text-gray-500 hover:text-red-400"
             }`}
           />
         </button>

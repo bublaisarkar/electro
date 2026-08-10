@@ -1,4 +1,4 @@
-import { NextAuthOptions } from "next-auth";
+import { AuthOptions } from "next-auth"; // or NextAuthOptions for v4
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { MongoDBAdapter } from "@auth/mongodb-adapter";
@@ -6,8 +6,10 @@ import clientPromise from "@/lib/mongodb-adapter";
 import bcrypt from "bcryptjs";
 import { connectToDatabase } from "@/lib/mongodb";
 import UserModel from "@/models/User";
+import type { Session, User } from "next-auth";
+import type { JWT } from "next-auth/jwt";
 
-export const authOptions: NextAuthOptions = {
+export const authOptions: AuthOptions = {
   adapter: MongoDBAdapter(clientPromise),
   providers: [
     GoogleProvider({
@@ -41,7 +43,7 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user }: { token: JWT; user?: User }) {
       if (user) {
         token.sub = user.id;
         token.isSeller = user.isSeller || false;
@@ -49,9 +51,9 @@ export const authOptions: NextAuthOptions = {
       }
       return token;
     },
-    async session({ session, token }) {
+    async session({ session, token }: { session: Session; token: JWT }) {
       if (session.user) {
-        session.user.id = token.sub;
+        session.user.id = token.sub as string;
         session.user.isSeller = token.isSeller || false;
         session.user.isAdmin = token.isAdmin || false;
       }

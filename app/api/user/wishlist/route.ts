@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
+import type { Session } from 'next-auth'; // ✅ import the Session type
 import { connectToDatabase } from '@/lib/mongodb';
 import User from '@/models/User';
 import Product from '@/models/Product';
@@ -9,8 +10,12 @@ import mongoose from 'mongoose';
 // ─── GET: Fetch the user's wishlist ───
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user) {
+    // ✅ Type‑safe session
+    const session = (await getServerSession(authOptions)) as (Session & {
+      user: { id: string };
+    }) | null;
+
+    if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -25,7 +30,6 @@ export async function GET() {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // Return the populated wishlist array (or empty array if not present)
     return NextResponse.json(user.wishlist || []);
   } catch (error) {
     console.error('GET /api/user/wishlist error:', error);
@@ -39,8 +43,12 @@ export async function GET() {
 // ─── POST: Toggle a product in the wishlist ───
 export async function POST(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user) {
+    // ✅ Type‑safe session
+    const session = (await getServerSession(authOptions)) as (Session & {
+      user: { id: string };
+    }) | null;
+
+    if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -53,7 +61,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // Validate MongoDB ObjectId format
     if (!mongoose.Types.ObjectId.isValid(productId)) {
       return NextResponse.json(
         { error: 'Invalid product ID' },
@@ -63,7 +70,6 @@ export async function POST(req: Request) {
 
     await connectToDatabase();
 
-    // Check if the product exists
     const product = await Product.findById(productId);
     if (!product) {
       return NextResponse.json(
@@ -72,26 +78,23 @@ export async function POST(req: Request) {
       );
     }
 
-    // Find the user
     const user = await User.findById(session.user.id);
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // Ensure wishlist is an array
     const wishlist = user.wishlist || [];
+    // ✅ Explicitly type the callback parameter
     const index = wishlist.findIndex(
-      (id) => id.toString() === productId
+      (id: mongoose.Types.ObjectId) => id.toString() === productId
     );
 
     let action: 'added' | 'removed';
 
     if (index > -1) {
-      // Remove from wishlist
       wishlist.splice(index, 1);
       action = 'removed';
     } else {
-      // Add to wishlist
       wishlist.push(new mongoose.Types.ObjectId(productId));
       action = 'added';
     }
