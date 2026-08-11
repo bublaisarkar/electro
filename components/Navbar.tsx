@@ -29,6 +29,7 @@ const Navbar = () => {
   const canAccessSeller = user?.isSeller === true || user?.isAdmin === true;
 
   useEffect(() => {
+    // This effect runs once after mount to prevent hydration mismatch.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
@@ -50,19 +51,19 @@ const Navbar = () => {
       <nav className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md shadow-sm border-b border-gray-200/60 transition-all duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 lg:h-20">
-            {/* Logo – now served from public folder */}
+            {/* Logo */}
             <div className="flex-shrink-0 w-28 md:w-32 lg:w-36">
               <div className="relative aspect-[4/1]">
                 <Image
-  onClick={() => router.push("/")}
-  src="/logo.png"
-  alt="Electro Store"
-  width={160}
-  height={40}
-  className="cursor-pointer w-28 md:w-32 lg:w-36"
-  style={{ height: "auto" }}   // ← add this
-  priority
-/>
+                  onClick={() => router.push("/")}
+                  src="/logo.png"
+                  alt="Electro Store"
+                  width={160}
+                  height={40}
+                  className="cursor-pointer w-28 md:w-32 lg:w-36"
+                  style={{ height: "auto" }}
+                  priority
+                />
               </div>
             </div>
 
@@ -155,7 +156,7 @@ const Navbar = () => {
         </div>
       </nav>
 
-      {/* Mobile side drawer */}
+      {/* Mobile side drawer – FIXED: added overflow-y-auto to inner container */}
       {mobileMenuOpen && (
         <>
           <div
@@ -163,7 +164,7 @@ const Navbar = () => {
             onClick={closeMobileMenu}
           />
           <div className="fixed top-0 right-0 h-full w-64 bg-white shadow-2xl z-50 md:hidden transform transition-transform duration-300 ease-in-out">
-            <div className="flex flex-col h-full p-6">
+            <div className="flex flex-col h-full p-6 overflow-y-auto"> {/* ← overflow-y-auto added here */}
               <button
                 onClick={closeMobileMenu}
                 className="self-end p-2 text-gray-500 hover:text-gray-700"
