@@ -11,7 +11,7 @@ import {
   ShoppingCart,
   LogOut,
   LayoutDashboard,
-  Heart,
+  Heart, // ✅ added Heart
 } from "lucide-react";
 
 export default function UserButton() {
@@ -21,8 +21,6 @@ export default function UserButton() {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // This effect runs once after mount to prevent hydration mismatch.
-    // The setState call is intentional and safe here.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
@@ -60,6 +58,7 @@ export default function UserButton() {
 
   const user = session?.user;
   const avatarUrl = user?.image || "/default-avatar.png";
+  // ✅ Use type assertion with a specific shape
   const userWithRoles = user as { isSeller?: boolean; isAdmin?: boolean };
   const canAccessSeller = userWithRoles?.isSeller || userWithRoles?.isAdmin || false;
 
@@ -82,12 +81,7 @@ export default function UserButton() {
       </button>
 
       {dropdownOpen && (
-        <div
-          className="absolute right-0 mt-2 w-56 sm:w-64 bg-white rounded-xl shadow-lg border border-gray-200 z-50 overflow-y-auto"
-          style={{
-            maxHeight: "min(80vh, 400px)",
-          }}
-        >
+        <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-200 z-50 overflow-hidden">
           <div className="px-4 py-3 border-b border-gray-100">
             <p className="font-medium text-gray-800 truncate">{user?.name}</p>
             <p className="text-xs text-gray-500 truncate">{user?.email}</p>
@@ -107,6 +101,7 @@ export default function UserButton() {
             >
               <ShoppingBag size={16} /> My Orders
             </Link>
+            {/* ✅ Wishlist link added here */}
             <Link
               href="/wishlist"
               onClick={() => setDropdownOpen(false)}
