@@ -42,12 +42,19 @@ export async function POST(req: Request) {
         email,
         password: null, 
         isSeller: false,
+        isAdmin: false,
         image: picture || null,
       });
     }
 
+    // FIXED: Mapped user._id to 'id' and added required role flags
     const token = jwt.sign(
-      { userId: user._id, email: user.email },
+      { 
+        id: user._id.toString(), 
+        email: user.email,
+        isSeller: user.isSeller || false,
+        isAdmin: user.isAdmin || false
+      },
       process.env.NEXTAUTH_SECRET || 'fallback_secret',
       { expiresIn: '30d' }
     );

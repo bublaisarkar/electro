@@ -1,9 +1,8 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import type { Session } from 'next-auth';
 import { connectToDatabase } from '@/lib/mongodb';
 import Order, { IOrder } from '@/models/Order';
-import { authOptions } from '@/lib/auth';
+// Import the helper from your lib folder
+import { getAuthUser } from '@/lib/getAuthUser';
 
 type OrderDoc = IOrder & { user: { toString(): string } };
 
@@ -14,8 +13,10 @@ export async function GET(
   try {
     const { id } = await params;
 
-    const session = (await getServerSession(authOptions)) as Session | null;
-    if (!session?.user?.id) {
+    // Use the imported helper
+    const user = await getAuthUser(req);
+    
+    if (!user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -30,8 +31,8 @@ export async function GET(
     }
 
     const orderWithUser = order as OrderDoc;
-    const isOwner = orderWithUser.user.toString() === session.user.id;
-    const isStaff = session.user.isSeller || session.user.isAdmin; // ✅ now works
+    const isOwner = orderWithUser.user.toString() === user.id;
+    const isStaff = user.isSeller || user.isAdmin; 
 
     if (!isOwner && !isStaff) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
@@ -54,12 +55,14 @@ export async function PUT(
   try {
     const { id } = await params;
 
-    const session = (await getServerSession(authOptions)) as Session | null;
-    if (!session?.user?.id) {
+    // Use the imported helper
+    const user = await getAuthUser(req);
+    
+    if (!user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    if (!session.user.isSeller && !session.user.isAdmin) {
+    if (!user.isSeller && !user.isAdmin) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 

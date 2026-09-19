@@ -1,26 +1,23 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import type { Session } from 'next-auth'; // ✅ import the Session type
 import { connectToDatabase } from '@/lib/mongodb';
 import Order from '@/models/Order';
 import Product from '@/models/Product';
 import Address from '@/models/Address';
-import { authOptions } from '@/lib/auth';
+// Import the dual-auth helper instead of getServerSession
+import { getAuthUser } from '@/lib/getAuthUser';
 
 // ─── GET all orders for the logged‑in user ───
-export async function GET() {
+export async function GET(req: Request) { // Added req: Request to pass to getAuthUser
   try {
-    const session = (await getServerSession(authOptions)) as (Session & {
-      user: { id: string };
-    }) | null;
+    const user = await getAuthUser(req);
 
-    if (!session?.user?.id) {
+    if (!user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     await connectToDatabase();
 
-    const orders = await Order.find({ user: session.user.id })
+    const orders = await Order.find({ user: user.id })
       .populate('items.product')
       .populate('address')
       .sort({ createdAt: -1 });
@@ -35,11 +32,9 @@ export async function GET() {
 // ─── POST create a new order ───
 export async function POST(req: Request) {
   try {
-    const session = (await getServerSession(authOptions)) as (Session & {
-      user: { id: string };
-    }) | null;
+    const user = await getAuthUser(req);
 
-    if (!session?.user?.id) {
+    if (!user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -57,7 +52,7 @@ export async function POST(req: Request) {
     await connectToDatabase();
 
     // Verify address belongs to user
-    const address = await Address.findOne({ _id: addressId, userId: session.user.id });
+    const address = await Address.findOne({ _id: addressId, userId: user.id });
     if (!address) {
       return NextResponse.json({ error: 'Address not found' }, { status: 404 });
     }
@@ -106,7 +101,7 @@ export async function POST(req: Request) {
 
     // Create order
     const orderData = {
-      user: session.user.id,
+      user: user.id,
       items: orderItems,
       amount: finalAmount,
       address: addressId,
