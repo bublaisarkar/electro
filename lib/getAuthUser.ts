@@ -2,7 +2,6 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 
-// Define the exact shape of our mobile token
 interface CustomJwtPayload extends JwtPayload {
   id: string;
   isSeller: boolean;
@@ -20,7 +19,6 @@ export async function getAuthUser(req: Request) {
     const token = authHeader.split(' ')[1];
     try {
       const secret = process.env.NEXTAUTH_SECRET || 'fallback_secret';
-      // Cast the decoded token to our custom interface instead of 'any'
       const decoded = jwt.verify(token, secret) as CustomJwtPayload;
       
       return { 
@@ -28,8 +26,9 @@ export async function getAuthUser(req: Request) {
         isSeller: decoded.isSeller, 
         isAdmin: decoded.isAdmin 
       };
-    } catch {
-      // Removed the unused 'error' variable here to satisfy ESLint
+    } catch (err: any) {
+      // This will print the exact reason (e.g., "invalid signature", "jwt expired") in your Next.js console
+      console.error('JWT Verification Failed in getAuthUser:', err.message);
       return null;
     }
   }

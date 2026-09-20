@@ -47,7 +47,17 @@ export async function POST(req: Request) {
       });
     }
 
-    // FIXED: Mapped user._id to 'id' and added required role flags
+    // Ensure NEXTAUTH_SECRET is properly configured
+    const secret = process.env.NEXTAUTH_SECRET;
+    if (!secret) {
+      console.error('CRITICAL: NEXTAUTH_SECRET is not defined in environment variables!');
+      return NextResponse.json(
+        { error: 'Server configuration error' },
+        { status: 500 }
+      );
+    }
+
+    // Sign token securely matching getAuthUser expectations
     const token = jwt.sign(
       { 
         id: user._id.toString(), 
@@ -55,7 +65,7 @@ export async function POST(req: Request) {
         isSeller: user.isSeller || false,
         isAdmin: user.isAdmin || false
       },
-      process.env.NEXTAUTH_SECRET || 'fallback_secret',
+      secret,
       { expiresIn: '30d' }
     );
 

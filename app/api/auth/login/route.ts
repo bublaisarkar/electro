@@ -33,18 +33,29 @@ export async function POST(req: Request) {
       );
     }
 
+    const secret = process.env.NEXTAUTH_SECRET;
+    if (!secret) {
+      console.error('CRITICAL: NEXTAUTH_SECRET is not defined!');
+      return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
+    }
+
+    // FIXED: Use 'id' (matching getAuthUser) and include role flags
     const token = jwt.sign(
-      { userId: user._id, email: user.email },
-      process.env.NEXTAUTH_SECRET || 'fallback_secret',
+      { 
+        id: user._id.toString(), 
+        email: user.email,
+        isSeller: user.isSeller || false,
+        isAdmin: user.isAdmin || false
+      },
+      secret,
       { expiresIn: '30d' }
     );
 
     const userObj = user.toObject();
     delete userObj.password;
-    const userWithoutPassword = userObj;
 
     return NextResponse.json(
-      { message: 'Logged in successfully', token, user: userWithoutPassword },
+      { message: 'Logged in successfully', token, user: userObj },
       { status: 200 }
     );
   } catch (error) {
