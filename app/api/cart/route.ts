@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/mongodb';
 import User from '@/models/User';
-import Product from '@/models/Product';
+import '@/models/Product'; // 👈 CRITICAL: Force-registers the Product model for Mongoose population
 import { getAuthUser } from '@/lib/getAuthUser';
 
 // ─── GET cart for the logged-in user ───
@@ -20,9 +20,9 @@ export async function GET(req: Request) {
     }
 
     return NextResponse.json({ items: user.cart || [] });
-  } catch (error) {
-    console.error('GET /api/cart error:', error);
-    return NextResponse.json({ error: 'Failed to fetch cart' }, { status: 500 });
+  } catch (error: any) {
+    console.error('GET /api/cart error stack:', error.message || error);
+    return NextResponse.json({ error: 'Failed to fetch cart', details: error.message }, { status: 500 });
   }
 }
 
@@ -46,7 +46,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // Ensure cart array is initialized
     if (!user.cart) {
       user.cart = [];
     }
@@ -54,10 +53,8 @@ export async function POST(req: Request) {
     const itemIndex = user.cart.findIndex((item: any) => item.product.toString() === productId);
 
     if (itemIndex > -1) {
-      // Update quantity if item already exists
       user.cart[itemIndex].quantity += (quantity || 1);
     } else {
-      // Add new item
       user.cart.push({ product: productId, quantity: quantity || 1 });
     }
 
@@ -65,9 +62,9 @@ export async function POST(req: Request) {
     await user.populate('cart.product');
 
     return NextResponse.json({ items: user.cart });
-  } catch (error) {
-    console.error('POST /api/cart error:', error);
-    return NextResponse.json({ error: 'Failed to update cart' }, { status: 500 });
+  } catch (error: any) {
+    console.error('POST /api/cart error stack:', error.message || error);
+    return NextResponse.json({ error: 'Failed to update cart', details: error.message }, { status: 500 });
   }
 }
 
@@ -90,8 +87,8 @@ export async function DELETE(req: Request) {
     }
 
     return NextResponse.json({ items: user?.cart || [] });
-  } catch (error) {
-    console.error('DELETE /api/cart error:', error);
-    return NextResponse.json({ error: 'Failed to remove item' }, { status: 500 });
+  } catch (error: any) {
+    console.error('DELETE /api/cart error stack:', error.message || error);
+    return NextResponse.json({ error: 'Failed to remove item', details: error.message }, { status: 500 });
   }
 }
