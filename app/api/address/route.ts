@@ -51,8 +51,20 @@ export async function POST(req: Request) {
 
     const body = await req.json();
 
-    const required = ['street', 'city', 'state', 'postalCode', 'country'];
-    const missing = required.filter((field) => !body[field]);
+    // 🛠️ Normalize fields to support both mobile app payloads and web forms seamlessly
+    const normalizedData = {
+      street: body.street || body.area,
+      city: body.city,
+      state: body.state,
+      postalCode: body.postalCode || body.pincode,
+      country: body.country || 'India',
+      fullName: body.fullName || '',
+      phoneNumber: body.phoneNumber || '',
+    };
+
+    const required = ['street', 'city', 'state', 'postalCode'];
+    const missing = required.filter((field) => !normalizedData[field as keyof typeof normalizedData]);
+    
     if (missing.length) {
       return NextResponse.json(
         { error: `Missing required fields: ${missing.join(', ')}` },
@@ -64,7 +76,7 @@ export async function POST(req: Request) {
 
     const objectId = new mongoose.Types.ObjectId(userIdStr);
     await Address.create({
-      ...body,
+      ...normalizedData,
       userId: objectId,
     });
 
