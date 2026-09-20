@@ -1,27 +1,24 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import type { Session } from 'next-auth'; // ✅ import the Session type
+import type { NextRequest } from 'next/server';
 import { connectToDatabase } from '@/lib/mongodb';
 import User from '@/models/User';
 import Product from '@/models/Product';
-import { authOptions } from '@/lib/auth';
+import { getAuthUser } from '@/lib/getAuthUser';
 import mongoose from 'mongoose';
 
 // ─── GET: Fetch the user's wishlist ───
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    // ✅ Type‑safe session
-    const session = (await getServerSession(authOptions)) as (Session & {
-      user: { id: string };
-    }) | null;
+    // ✅ Uses dual-auth helper (supports both Web cookies and Mobile Bearer tokens)
+    const authUser = await getAuthUser(req);
 
-    if (!session?.user?.id) {
+    if (!authUser?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     await connectToDatabase();
 
-    const user = await User.findById(session.user.id).populate({
+    const user = await User.findById(authUser.id).populate({
       path: 'wishlist',
       model: Product,
     });
@@ -41,14 +38,12 @@ export async function GET() {
 }
 
 // ─── POST: Toggle a product in the wishlist ───
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
-    // ✅ Type‑safe session
-    const session = (await getServerSession(authOptions)) as (Session & {
-      user: { id: string };
-    }) | null;
+    // ✅ Uses dual-auth helper
+    const authUser = await getAuthUser(req);
 
-    if (!session?.user?.id) {
+    if (!authUser?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -78,13 +73,12 @@ export async function POST(req: Request) {
       );
     }
 
-    const user = await User.findById(session.user.id);
+    const user = await User.findById(authUser.id);
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
     const wishlist = user.wishlist || [];
-    // ✅ Explicitly type the callback parameter
     const index = wishlist.findIndex(
       (id: mongoose.Types.ObjectId) => id.toString() === productId
     );
