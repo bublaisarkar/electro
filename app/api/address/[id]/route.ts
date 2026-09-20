@@ -1,10 +1,25 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
-import type { Session } from 'next-auth';  // ✅ import the Session type
+import type { Session } from 'next-auth'; 
 import { connectToDatabase } from '@/lib/mongodb';
 import Address from '@/models/Address';
 import { authOptions } from '@/lib/auth';
+import { getAuthUser } from '@/lib/getAuthUser';
 import mongoose from 'mongoose';
+
+async function getUserIdFromRequest(req: Request): Promise<string | null> {
+  const session = (await getServerSession(authOptions)) as Session | null;
+  if (session?.user?.id) {
+    return session.user.id;
+  }
+
+  const authUser = await getAuthUser(req);
+  if (authUser?.id) {
+    return authUser.id;
+  }
+
+  return null;
+}
 
 // ─── GET single address ───
 export async function GET(
@@ -13,16 +28,15 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
+    const userIdStr = await getUserIdFromRequest(req);
 
-    // ✅ Type the session correctly
-    const session = (await getServerSession(authOptions)) as Session | null;
-    if (!session?.user?.id) {
+    if (!userIdStr) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     await connectToDatabase();
 
-    const userId = new mongoose.Types.ObjectId(session.user.id);
+    const userId = new mongoose.Types.ObjectId(userIdStr);
     const address = await Address.findOne({
       _id: id,
       userId,
@@ -46,15 +60,15 @@ export async function PUT(
 ) {
   try {
     const { id } = await params;
+    const userIdStr = await getUserIdFromRequest(req);
 
-    const session = (await getServerSession(authOptions)) as Session | null;
-    if (!session?.user?.id) {
+    if (!userIdStr) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const body = await req.json();
 
-    const required = ['fullName', 'phoneNumber', 'pincode', 'area', 'city', 'state'];
+    const required = ['street', 'city', 'state', 'postalCode', 'country'];
     const missing = required.filter((field) => !body[field]);
     if (missing.length) {
       return NextResponse.json(
@@ -65,7 +79,7 @@ export async function PUT(
 
     await connectToDatabase();
 
-    const userId = new mongoose.Types.ObjectId(session.user.id);
+    const userId = new mongoose.Types.ObjectId(userIdStr);
     const address = await Address.findOneAndUpdate(
       { _id: id, userId },
       body,
@@ -90,15 +104,15 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
+    const userIdStr = await getUserIdFromRequest(req);
 
-    const session = (await getServerSession(authOptions)) as Session | null;
-    if (!session?.user?.id) {
+    if (!userIdStr) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     await connectToDatabase();
 
-    const userId = new mongoose.Types.ObjectId(session.user.id);
+    const userId = new mongoose.Types.ObjectId(userIdStr);
     const address = await Address.findOneAndDelete({
       _id: id,
       userId,
