@@ -78,5 +78,11 @@ export async function proxy(req: NextRequest) {
 
 // ----- Update the matcher to cover ALL API routes -----
 export const config = {
-  matcher: ['/seller/:path*', '/api/seller/:path*', '/api/:path*'],
+  matcher: [
+    '/seller/:path*', 
+    '/api/seller/:path*', 
+    '/api/cart/:path*', 
+    '/api/user/wishlist/:path*', 
+    '/api/orders/:path*'
+  ],
 };
