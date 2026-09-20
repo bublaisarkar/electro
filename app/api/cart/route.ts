@@ -46,6 +46,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
+    // Ensure cart array is initialized
+    if (!user.cart) {
+      user.cart = [];
+    }
+
     const itemIndex = user.cart.findIndex((item: any) => item.product.toString() === productId);
 
     if (itemIndex > -1) {
@@ -79,7 +84,7 @@ export async function DELETE(req: Request) {
 
     const user = await User.findById(authUser.id);
     if (user) {
-      user.cart = user.cart.filter((item: any) => item.product.toString() !== productId);
+      user.cart = (user.cart || []).filter((item: any) => item.product.toString() !== productId);
       await user.save();
       await user.populate('cart.product');
     }
