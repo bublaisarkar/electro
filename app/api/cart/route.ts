@@ -76,7 +76,23 @@ export async function DELETE(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { productId } = await req.json();
+    // 🛠️ Support both query parameters (reliable) and request body
+    const { searchParams } = new URL(req.url);
+    let productId = searchParams.get('productId');
+
+    if (!productId) {
+      try {
+        const body = await req.json();
+        productId = body?.productId;
+      } catch (e) {
+        // Ignore if body is empty
+      }
+    }
+
+    if (!productId) {
+      return NextResponse.json({ error: 'Missing productId' }, { status: 400 });
+    }
+
     await connectToDatabase();
 
     const user = await User.findById(authUser.id);
