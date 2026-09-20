@@ -9,6 +9,12 @@ const UserSchema = new mongoose.Schema(
     isSeller: { type: Boolean, default: false },
     addresses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Address' }],
     wishlist: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }],
+    cart: [
+      {
+        product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
+        quantity: { type: Number, required: true, default: 1 },
+      },
+    ],
   },
   { timestamps: true }
 );
