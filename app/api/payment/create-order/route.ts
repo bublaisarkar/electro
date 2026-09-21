@@ -1,19 +1,20 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import type { Session } from 'next-auth';
 import { connectToDatabase } from '@/lib/mongodb';
 import Order from '@/models/Order';
 import razorpay from '@/lib/razorpay';
-import { authOptions } from '@/lib/auth';
+import { getAuthUser } from '@/lib/getAuthUser'; // ✅ Import your dual-auth helper
 
 export async function POST(req: Request) {
   try {
-    const session = (await getServerSession(authOptions)) as Session | null;
-    if (!session?.user) {
+    // ✅ Use getAuthUser to support both mobile JWT tokens and web sessions
+    const user = await getAuthUser(req);
+    if (!user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { orderId } = (await req.json()) as { orderId?: string };
+    const body = await (req as any).json();
+    const { orderId } = body || {};
+    
     if (!orderId) {
       return NextResponse.json(
         { error: 'Order ID is required' },
@@ -28,7 +29,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Order not found' }, { status: 404 });
     }
 
-    if (order.user.toString() !== session.user.id) {
+    if (order.user.toString() !== user.id) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
@@ -71,7 +72,7 @@ export async function POST(req: Request) {
       receipt: `order_${order._id}`,
       notes: {
         orderId: order._id.toString(),
-        userId: session.user.id,
+        userId: user.id,
       },
     });
 
@@ -86,7 +87,6 @@ export async function POST(req: Request) {
     });
   } catch (error) {
     console.error('POST /api/payment/create-order error:', error);
-    // Send detailed error for debugging
     const message = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
       { error: 'Failed to create payment order', details: message },
