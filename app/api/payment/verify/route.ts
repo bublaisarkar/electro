@@ -51,7 +51,7 @@ export async function POST(req: Request) {
     order.razorpayPaymentId = razorpay_payment_id;
     order.razorpaySignature = razorpay_signature;
     order.paymentStatus = 'Paid';
-    order.status = 'Processing';
+    order.status = 'pending';
     await order.save();
 
     return NextResponse.json({
