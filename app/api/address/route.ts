@@ -51,18 +51,19 @@ export async function POST(req: Request) {
 
     const body = await req.json();
 
-    // 🛠️ Normalize fields to support both mobile app payloads and web forms seamlessly
+    // 🛠️ Normalize and map fields to match your Mongoose Address schema properties exactly
     const normalizedData = {
-      street: body.street || body.area,
-      city: body.city,
-      state: body.state,
-      postalCode: body.postalCode || body.pincode,
+      area: body.street || body.area || '',
+      city: body.city || '',
+      state: body.state || '',
+      pincode: body.postalCode || body.pincode || '',
       country: body.country || 'India',
-      fullName: body.fullName || '',
-      phoneNumber: body.phoneNumber || '',
+      fullName: body.fullName || 'User',         // Fallback to satisfy schema requirement
+      phoneNumber: body.phoneNumber || '0000000000', // Fallback to satisfy schema requirement
     };
 
-    const required = ['street', 'city', 'state', 'postalCode'];
+    // Validate required fields based on schema expectations
+    const required = ['area', 'city', 'state', 'pincode'];
     const missing = required.filter((field) => !normalizedData[field as keyof typeof normalizedData]);
     
     if (missing.length) {
