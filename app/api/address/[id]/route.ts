@@ -122,7 +122,9 @@ export async function DELETE(
       return NextResponse.json({ error: 'Address not found' }, { status: 404 });
     }
 
-    return NextResponse.json({ message: 'Address deleted successfully' });
+    // 🛠️ Return the full updated list of remaining addresses to match frontend state
+    const allAddresses = await Address.find({ userId }).sort({ createdAt: -1 });
+    return NextResponse.json(allAddresses);
   } catch (error) {
     console.error('DELETE /api/address/[id] error:', error);
     return NextResponse.json({ error: 'Failed to delete address' }, { status: 500 });
