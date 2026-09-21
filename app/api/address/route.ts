@@ -90,3 +90,38 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Failed to create address' }, { status: 500 });
   }
 }
+
+export async function DELETE(req: Request) {
+  try {
+    const userIdStr = await getUserIdFromRequest(req);
+    if (!userIdStr) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(req.url);
+    const addressId = searchParams.get('id');
+
+    if (!addressId) {
+      return NextResponse.json({ error: 'Address ID is required' }, { status: 400 });
+    }
+
+    await connectToDatabase();
+    
+    // Ensure the address belongs to the authenticated user for security
+    const deleted = await Address.findOneAndDelete({ 
+      _id: new mongoose.Types.ObjectId(addressId), 
+      userId: new mongoose.Types.ObjectId(userIdStr) 
+    });
+
+    if (!deleted) {
+      return NextResponse.json({ error: 'Address not found or unauthorized' }, { status: 404 });
+    }
+
+    // Return the updated list of remaining addresses
+    const allAddresses = await Address.find({ userId: new mongoose.Types.ObjectId(userIdStr) }).sort({ createdAt: -1 });
+    return NextResponse.json(allAddresses, { status: 200 });
+  } catch (error) {
+    console.error('DELETE /api/address error:', error);
+    return NextResponse.json({ error: 'Failed to delete address' }, { status: 500 });
+  }
+}
