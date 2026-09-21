@@ -1,19 +1,14 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import type { Session } from 'next-auth'; // ✅ import the Session type
 import { connectToDatabase } from '@/lib/mongodb';
 import Order from '@/models/Order';
-import { authOptions } from '@/lib/auth';
+import { getAuthUser } from '@/lib/getAuthUser'; // ✅ Import dual-auth helper
 import crypto from 'crypto';
 
 export async function POST(req: Request) {
   try {
-    // ✅ Type‑safe session with user.id
-    const session = (await getServerSession(authOptions)) as (Session & {
-      user: { id: string };
-    }) | null;
-
-    if (!session?.user?.id) {
+    // ✅ Authenticate using either mobile JWT token or web session
+    const user = await getAuthUser(req);
+    if (!user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -48,8 +43,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Order not found' }, { status: 404 });
     }
 
-    // ✅ Now session.user.id is recognised
-    if (order.user.toString() !== session.user.id) {
+    if (order.user.toString() !== user.id) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
@@ -57,9 +51,8 @@ export async function POST(req: Request) {
     order.razorpayPaymentId = razorpay_payment_id;
     order.razorpaySignature = razorpay_signature;
     order.paymentStatus = 'Paid';
+    order.status = 'Processing';
     await order.save();
-
-    // Optionally, reduce product stock here (future enhancement)
 
     return NextResponse.json({
       message: 'Payment verified successfully',
