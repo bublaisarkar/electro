@@ -1,4 +1,4 @@
-import { AuthOptions } from "next-auth"; // or NextAuthOptions for v4
+import { AuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { MongoDBAdapter } from "@auth/mongodb-adapter";
@@ -45,17 +45,17 @@ export const authOptions: AuthOptions = {
   callbacks: {
     async jwt({ token, user }: { token: JWT; user?: User }) {
       if (user) {
-        token.sub = user.id;
-        token.isSeller = user.isSeller || false;
-        token.isAdmin = user.isAdmin || false;
+        token.id = user.id; // 🛠️ Store user ID cleanly in dedicated token property
+        token.isSeller = (user as any).isSeller || false;
+        token.isAdmin = (user as any).isAdmin || false;
       }
       return token;
     },
     async session({ session, token }: { session: Session; token: JWT }) {
       if (session.user) {
-        session.user.id = token.sub as string;
-        session.user.isSeller = token.isSeller || false;
-        session.user.isAdmin = token.isAdmin || false;
+        session.user.id = token.id as string; // 🛠️ Map token ID to session.user.id
+        (session.user as any).isSeller = token.isSeller || false;
+        (session.user as any).isAdmin = token.isAdmin || false;
       }
       return session;
     },
