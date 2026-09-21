@@ -83,6 +83,7 @@ export const config = {
     '/api/seller/:path*', 
     '/api/cart/:path*', 
     '/api/user/wishlist/:path*', 
-    '/api/orders/:path*'
+    '/api/orders/:path*',
+    '/api/address/:path*' // 🛠️ Add this so address routes are properly covered
   ],
 };
